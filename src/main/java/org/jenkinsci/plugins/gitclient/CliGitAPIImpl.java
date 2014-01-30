@@ -1088,14 +1088,18 @@ public class CliGitAPIImpl extends LegacyCompatibleGitAPIImpl {
             Launcher.ProcStarter p = launcher.launch().cmds(args.toCommandArray()).
                     envs(environment).stdout(fos).stderr(err);
             if (workDir == null) {
-                String home = System.getProperty("user.home");
-                workDir = new File(home);
+                File tempDir = File.createTempFile("git","");
+                tempDir.delete();
+                tempDir.mkdir();
+                workDir = tempDir;
             }
-
-            if (workDir.exists() && workDir.isDirectory()) {
-                p.pwd(workDir);
+           
+            File gitDir = new File(workDir.getAbsoluteFile() + File.separator + ".git");
+            if (!gitDir.exists()) {
+                gitDir.mkdir();
             }
-
+            p.pwd(workDir);
+            
             int status = p.start().joinWithTimeout(TIMEOUT, TimeUnit.MINUTES, listener);
 
             String result = fos.toString();
